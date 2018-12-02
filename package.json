@@ -1,0 +1,26 @@
+{
+  "name": "node-telegram-firestore-message-replier",
+  "description": "Node module which allows the bot to reply to a random message in the chat",
+  "version": "1.0.0",
+  "main": "./index.js",
+  "author": {
+    "name": "Marat Fakhreev",
+    "email": "marat.fakhreev@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://gitlab.com/maratfakhreev/node-telegram-firestore-message-replier.git"
+  },
+  "scripts": {
+    "start": "node index.js --max-old-space-size=128",
+    "dev": "nodemon index.js --max-old-space-size=128"
+  },
+  "peerDependencies": {
+    "node-telegram-bot-api": ">=0.30.0"
+  },
+  "dependencies": {
+    "firebase-admin": "^6.3.0",
+    "lodash": "^4.17.4"
+  }
+}
