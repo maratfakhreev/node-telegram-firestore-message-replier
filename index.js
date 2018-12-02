@@ -1,4 +1,4 @@
-const { random, remove, unionWith } = require('lodash');
+const { random, remove, unionWith, get } = require('lodash');
 const firebase = require('firebase-admin');
 
 module.exports = class TelegramFirestoreMessageReplier {
@@ -8,26 +8,25 @@ module.exports = class TelegramFirestoreMessageReplier {
       databaseURL: options.firestore.databaseUrl,
     });
 
-    this.storage = firebase.firestore().doc(options.firestore.docPath || 'collection/chats');
     this.bot = options.bot;
-    this.defaultChance = options.defaultChance || 0;
+    this.storage = firebase.firestore().doc(options.firestore.docPath || 'collection/chats');
     this.showChanceMessage = options.showChanceMessage || 'Current chance is CURRENT_CHANCE%';
     this.setChanceMessage = options.setChanceMessage || 'Current chance changed from CURRENT_CHANCE% to NEXT_CHANCE%';
   }
 
-  showChance(msg) {
+  async showChance(msg) {
     const chatId = msg.chat.id;
-    const currentChance = this.getCurrentChance(chatId);
+    const currentChance = await this.getCurrentChance(chatId);
 
     this.bot.sendMessage(chatId, this.handleMessage(this.showChanceMessage, currentChance));
   }
 
-  setChance(msg, value) {
+  async setChance(msg, value) {
     const chatId = msg.chat.id;
     const chance = parseInt(value);
 
     if (isNaN(chance)) {
-      const currentChance = this.getCurrentChance(chatId);
+      const currentChance = await this.getCurrentChance(chatId);
 
       return this.bot.sendMessage(chatId, this.handleMessage(this.showChanceMessage, currentChance));
     }
@@ -35,16 +34,18 @@ module.exports = class TelegramFirestoreMessageReplier {
     this.saveChance(chatId, chance);
   }
 
-  process(msg, successCb, errorCb = () => {}) {
+  async process(msg, successCb, errorCb = () => { }) {
     const chatId = msg.chat.id;
-    const currentChatIndex = this.getChatIndex(chatId);
+    const currentChatIndex = await this.getChatIndex(chatId);
 
     if (!successCb || typeof successCb !== 'function') {
       throw new Error('Specify success callback that handles replied message as second parameter of process function');
     }
 
     if (currentChatIndex > -1) {
-      if (random(1, 100) <= this.getChat(currentChatIndex).chance) {
+      const chat = await this.getChat(currentChatIndex);
+
+      if (random(1, 100) <= chat.chance) {
         successCb(msg);
       } else {
         errorCb(msg);
@@ -63,10 +64,10 @@ module.exports = class TelegramFirestoreMessageReplier {
     return newMsg;
   }
 
-  saveChance(chatId, nextChance) {
+  async saveChance(chatId, nextChance) {
     if (nextChance > 100) nextChance = 100;
 
-    const currentChance = this.getCurrentChance(chatId);
+    const currentChance = await this.getCurrentChance(chatId);
 
     this.bot.sendMessage(chatId, this.handleMessage(this.setChanceMessage, currentChance, nextChance));
 
@@ -77,44 +78,48 @@ module.exports = class TelegramFirestoreMessageReplier {
     }
   }
 
-  getCurrentChance(chatId) {
-    const currentChatIndex = this.getChatIndex(chatId);
+  async getCurrentChance(chatId) {
+    const currentChatIndex = await this.getChatIndex(chatId);
 
-    return currentChatIndex > -1 ?
-      this.getChat(currentChatIndex).chance :
-      this.defaultChance;
+    if (currentChatIndex > -1) {
+      const chat = await this.getChat(currentChatIndex);
+
+      return chat.chance;
+    }
   }
 
   async getChats() {
     const chats = await this.storage.get();
 
-    return chats.data().ids || [];
+    return get(chats.data(), 'ids', []);
   }
 
   setChats(chats) {
     this.storage.set({ ids: chats });
   }
 
-  getChat(index) {
-    return this.getChats()[index];
+  async getChat(index) {
+    const chat = await this.getChats();
+
+    return chat[index];
   }
 
-  getChatIndex(chatId) {
-    const chats = this.getChats();
+  async getChatIndex(chatId) {
+    const chats = await this.getChats();
     const chat = chats.filter(chat => chat.chatId === chatId)[0];
 
     return chats.indexOf(chat);
   }
 
-  removeChat(chatId) {
-    const chats = this.getChats();
+  async removeChat(chatId) {
+    const chats = await this.getChats();
 
     remove(chats, item => item.chatId === chatId);
     this.setChats(chats);
   }
 
-  pushChat(data) {
-    const chats = this.getChats();
+  async pushChat(data) {
+    const chats = await this.getChats();
     const unionChats = unionWith([data], chats, (a, b) => a.chatId === b.chatId);
 
     this.setChats(unionChats);

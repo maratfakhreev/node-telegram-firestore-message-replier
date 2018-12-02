@@ -31,7 +31,6 @@ const replier = new TelegramFirestoreMessageReplier({
     databaseUrl: 'https://YOUR_FIREBASE_URL.firebaseio.com',
     docPath: 'collection/chats'
   },
-  defaultChance: 0,
   showChanceMessage: 'Current chance is CURRENT_CHANCE%',
   setChanceMessage: 'Current chance changed from CURRENT_CHANCE% to NEXT_CHANCE%'
   // CURRENT_CHANCE and NEXT_CHANCE strings will be replaced with currentChance and nextChance values
@@ -73,7 +72,6 @@ bot.on('message', msg => {
 new TelegramFirestoreMessageReplier({
   bot: <your bot instance> // previously created bot via node-telegram-bot-api
   firestore: <object> // firestore db instance params
-  defaultChance: <number> // default chance to reply to a message | default: 0
   showChanceMessage: <string> // set message for show chance command
   setChanceMessage: <string> // set message for change chance command
 });
