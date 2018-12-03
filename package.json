@@ -1,7 +1,7 @@
 {
   "name": "node-telegram-firestore-message-replier",
   "description": "Node module which allows the bot to reply to a random message in the chat",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "./index.js",
   "author": {
     "name": "Marat Fakhreev",
