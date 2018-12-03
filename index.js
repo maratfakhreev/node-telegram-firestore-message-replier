@@ -34,7 +34,7 @@ module.exports = class TelegramFirestoreMessageReplier {
     this.saveChance(chatId, chance);
   }
 
-  async process(msg, successCb, errorCb = () => { }) {
+  async process(msg, successCb, errorCb = () => {}) {
     const chatId = msg.chat.id;
     const currentChatIndex = await this.getChatIndex(chatId);
 
@@ -86,6 +86,8 @@ module.exports = class TelegramFirestoreMessageReplier {
 
       return chat.chance;
     }
+
+    return 0;
   }
 
   async getChats() {
