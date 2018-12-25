@@ -8,8 +8,11 @@ module.exports = class TelegramFirestoreMessageReplier {
       databaseURL: options.firestore.databaseUrl,
     });
 
+    this.firestore = firebase.firestore();
+    this.firestore.settings({ timestampsInSnapshots: true });
+
     this.bot = options.bot;
-    this.storage = firebase.firestore().doc(options.firestore.docPath || 'collection/chats');
+    this.storage = this.firestore.doc(options.firestore.docPath || 'collection/chats');
     this.showChanceMessage = options.showChanceMessage || 'Current chance is CURRENT_CHANCE%';
     this.setChanceMessage = options.setChanceMessage || 'Current chance changed from CURRENT_CHANCE% to NEXT_CHANCE%';
   }
